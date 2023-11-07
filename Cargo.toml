@@ -1,0 +1,13 @@
+[package]
+name = "podnum"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+axum = "0.6.20"
+tokio = { version = "1.33.0", features = ["macros", "rt-multi-thread"] }
+omnipaxos = { git = "https://github.com/haraldng/omnipaxos", features = ["serde", "macros"] }
+omnipaxos_storage = { git = "https://github.com/haraldng/omnipaxos" }
+clap = { version = "4.4.7", features = ["derive"] }
