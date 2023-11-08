@@ -1,34 +1,59 @@
-use axum::{Router};
-use axum::routing::get;
-use clap::Parser;
+use std::ops::Deref;
+use std::sync::{Arc};
 
-#[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
-struct Args {
-    // Pid of podnum instance
-    #[arg(short, long)]
-    pid: u64,
-    // Node pids
-    #[arg(short, long, value_parser, num_args = 1.., value_delimiter = ',')]
-    nodes: Vec<u64>,
+use axum::extract::{Path, State};
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Response};
+use axum::Router;
+use axum::routing::{get, post};
+use clap::Parser;
+use tokio::sync::Mutex;
+use tracing::debug;
+use tracing::info;
+use tracing_subscriber;
+
+use config::PodNumArgs;
+
+use crate::podnum::server::{get_omni_paxos, Server};
+
+mod podnum;
+mod config;
+
+#[derive(Clone)]
+struct AppState {
+    pub server: Arc<Mutex<Server>>,
 }
 
-struct AppState {
+async fn handle_podnum(State(state): State<Arc<AppState>>,
+                       Path(host): Path<String>) -> impl IntoResponse {
+    let x = state.server.lock().await.get_podnum(&host);
 
+    (StatusCode::OK, "1")
 }
 
 
 #[tokio::main]
 async fn main() {
-    let args = Args::parse();
+    tracing_subscriber::fmt::init();
 
-    println!("Pid {}!", args.pid);
-    println!("nodes {:?}", args.nodes);
+    info!("Sample");
+
+    let args = PodNumArgs::parse();
+    info!("Pid {}!", args.pid);
+    debug!("nodes {:?}", args.nodes);
+    let server = get_omni_paxos(args.pid, args.nodes);
+    let serverMut = Arc::new(Mutex::new(*server));
+    let serverRun = serverMut.clone();
+    tokio::spawn( async move { serverRun.clone().lock().await.run().await; });
+
+    let state = Arc::new(AppState { server: serverMut });
 
     let app = Router::new()
-        .route("/", get(|| async {
-            "Hello, world!"
-        }));
+        .route("/health", get(|| async {
+            Response::new("OK");
+        }))
+        .route("/podnum/:host", post(handle_podnum))
+        .with_state(state);
 
     axum::Server::bind(&"0.0.0.0:3000".parse().unwrap())
         .serve(app.into_make_service())
