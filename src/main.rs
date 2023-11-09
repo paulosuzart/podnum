@@ -56,7 +56,7 @@ async fn main() {
         .route("/health", get(|| async {
             Response::new("OK");
         }))
-        .route("/podnum/:host", post(handle_podnum))
+        .route("/:host", post(handle_podnum))
         .with_state(state);
 
     axum::Server::bind(&"0.0.0.0:3000".parse().unwrap())
