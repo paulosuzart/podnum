@@ -42,11 +42,11 @@ async fn main() {
     info!("Pid {}!", args.pid);
     debug!("nodes {:?}", args.nodes);
     let server = get_omni_paxos(args.pid, args.nodes);
-    let serverMut = Arc::new(Mutex::new(*server));
-    let serverRun = serverMut.clone();
-    tokio::spawn( async move { serverRun.clone().lock().await.run().await; });
+    let server_mut = Arc::new(Mutex::new(server));
+    let server_run = server_mut.clone();
+    tokio::spawn( async move { server_run.clone().lock().await.run().await; });
 
-    let state = Arc::new(AppState { server: serverMut });
+    let state = Arc::new(AppState { server: server_mut });
 
     let app = Router::new()
         .route("/health", get(|| async {

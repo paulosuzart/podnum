@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 axum = "0.6.20"
-tokio = { version = "1.33.0", features = ["macros", "rt-multi-thread"] }
+tokio = { version = "1.33.0", features = ["macros", "rt-multi-thread", "io-util"] }
 omnipaxos = { git = "https://github.com/haraldng/omnipaxos", features = ["serde", "macros", "logging"] }
 omnipaxos_storage = { git = "https://github.com/haraldng/omnipaxos" }
 clap = { version = "4.4.7", features = ["derive"] }
@@ -16,3 +16,4 @@ commitlog = "0.2.0"
 serde = { version = "1.0.192", features = ["derive"] }
 tracing = "0.1"
 tracing-subscriber = "0.3.17"
+serde_json = "1.0.108"

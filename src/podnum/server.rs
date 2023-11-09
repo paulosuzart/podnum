@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use std::hash::Hash;
-use std::sync::Arc;
 use std::time::Duration;
 use commitlog::LogOptions;
 use omnipaxos::{ClusterConfig, OmniPaxos, OmniPaxosConfig, ServerConfig};
@@ -10,6 +9,7 @@ use sled::{Config};
 use serde::{Deserialize, Serialize};
 use tokio::time;
 use tracing::info;
+use crate::podnum::network::Network;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct AssignEntry {
@@ -141,7 +141,40 @@ impl Server {
     }
 }
 
-pub fn get_omni_paxos(pid: u64, nodes: Vec<u64>) -> Box<Server> {
+//     async fn process_incoming_msgs(&mut self) {
+//         let messages = self.network.get_received().await;
+//         for msg in messages {
+//             match msg {
+//                 Message::APIRequest(kv_cmd) => {
+//                     match kv_cmd {
+//                         KVCommand::Get(key) => {
+//                             let leader = self.omni_paxos.get_current_leader().unwrap();
+//                             let pid = self.pid;
+//                             println!("Current leader: {:?} - {:?}\n", leader, pid);
+//                             if leader != pid {
+//                                 let msg = Message::APIResponse(APIResponse::NotALeader(leader));
+//                                 self.network.send(0, msg).await;
+//                             } else {
+//                                 let value = self.database.handle_command(KVCommand::Get(key.clone()));
+//                                 let msg = Message::APIResponse(APIResponse::Get(key, value));
+//                                 self.network.send(0, msg).await;
+//                             }
+//                         },
+//                         cmd => {
+//                             self.omni_paxos.append(cmd).unwrap();
+//                         },
+//                     }
+//                 }
+//                 Message::OmniPaxosMsg(msg) => {
+//                     self.omni_paxos.handle_incoming(msg);
+//                 },
+//                 _ => unimplemented!(),
+//             }
+//         }
+//     }
+// }
+
+pub fn get_omni_paxos(pid: u64, nodes: Vec<u64>) -> Server {
     let server_config = ServerConfig {
         pid,
         election_tick_timeout: 5,
@@ -170,12 +203,12 @@ pub fn get_omni_paxos(pid: u64, nodes: Vec<u64>) -> Box<Server> {
         .build(PersistentStorage::new(persistency_config))
         .expect("failed to build OmniPaxos");
 
-    let server = Server {
+     Server {
         omni_paxos,
         database: Database::new(),
         last_decided_idx: 0,
         pid,
-    };
+    }
 
-    Box::from(server)
+
 }
