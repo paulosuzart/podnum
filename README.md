@@ -34,7 +34,7 @@ Having a low cardinality identifier is for applications running multiple statele
 Using `podnum` will reduce the cardinality up to the number of pods running plus the surge during rolling updates.
 
 ### Too many Kafka consumer groups
-In certain Kafka scenarios like request/reply pattern, getting back a response might be challenging. One of the options is to use one consumer group per stateless application instance. The problem begins with a lot of deployments leading to consumer groups using pod names or random ids being left behind.
+In certain Kafka scenarios like [request/reply pattern](https://bvn13.medium.com/request-reply-pattern-using-apache-kafka-or-how-not-to-loose-your-data-b30180918c55), getting back a response might be challenging. One of the options is to use one consumer group per stateless application instance. The problem begins with a lot of deployments leading to consumer groups using pod names or random ids being left behind.
 
 ### Inbox pattern
 It is common to use [inbox pattern](https://softwaremill.com/microservices-101/#inbox-pattern) to latter process items. To keep high throughput, applications can save data in different partitions (just a column in the database). Applications can take advantage of `podnum` to assign partitions to stateless instances to consume only partitions assigned to that node through techniques like [consistent hashing](http://highscalability.com/blog/2023/2/22/consistent-hashing-algorithm.html#:~:text=Consistent%20hashing%20is%20a%20distributed,of%20nodes%20changes%20%5B4%5D).  
