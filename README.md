@@ -4,6 +4,26 @@
 
 **It's important to highlight this is a exploratory work at the moment without urgency to become production ready.** 
 
+## How does `podnum` work?
+
+`podnum` takes advantage of [Omnipaxos](https://omnipaxos.com/), an innovative log replication framework that helps `podnum` keeps the leased numbers highly available.
+
+Pods (or stateless applications) after start will hit `podnum` `/{pod_host` endpoint. The reply is a plain number to be used by the application. Numbers are leased for 1 minute, if the application fails to heart bit, the number will be assigned to any new node asking for a number.
+```mermaid
+sequenceDiagram
+    loop: Every 5 minutes
+    Pod->>+podnum: /{pod_host}
+    podnum->>leader: /{pod_host}
+    leader->>leader: get or assign number
+    leader-->>podnum: n
+    podnum-->>Pod: n
+end
+```
+
+`podnum` will always forward requests to the leader of the cluster to make sure data is as fresh as possible. Applications are encouraged to heart bit more often than 5 minutes to renew the lease.
+
+It's up to the application to handle any change in assigned number in case of a delayed heart bit.
+
 ## Motivation
 
 In past companies, services were improvised to provide stable identifiers to pods, so they could use the identifiers for many purposes like metric collection.
@@ -21,18 +41,9 @@ It is common to use [inbox pattern](https://softwaremill.com/microservices-101/#
 
 Using `podnum`, developers can reduce the burden on kafka administration as lagging consumer groups are much reduced.
 
-## How does `podnum` work?
-
-`podnum` takes advantage of [Omnipaxos](https://omnipaxos.com/), an innovative log replication framework that helps `podnum` keeps the leased numbers highly available.
-
-Pods (or stateless applications) after start will hit `podnum` `/{pod_host` endpoint. The reply is a plain number to be used by the application. Numbers are leased for 1 minute, if the application fails to heart bit, the number will be assigned to any new node asking for a number.
-```mermaid
-sequenceDiagram
-    loop: Every minute
-    Pod->>+podnum: /{pod_host}
-    podnum->>leader: /{pod_host}
-    leader->>leader: get or assign number
-    leader-->>podnum: n
-    podnum-->>Pod: n
-end
-```
+# Todo
+- [ ] github actions
+- [ ] find a way to test multi nodes (use in memory storage and fake nodes?)
+- [ ] finish network implementation
+- [ ] forward requests to the leader
+- [ ] explore how it can lose consistency due to changing leader in the middle of a request
