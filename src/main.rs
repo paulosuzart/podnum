@@ -6,6 +6,7 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Router;
 use axum::routing::{get, post};
+use clap::error::ErrorKind;
 use clap::Parser;
 use tokio::sync::Mutex;
 use tracing::debug;
@@ -36,15 +37,18 @@ async fn handle_podnum(State(state): State<Arc<AppState>>,
 async fn main() {
     tracing_subscriber::fmt::init();
 
-    info!("Sample");
-
     let args = PodNumArgs::parse();
-    info!("Pid {}!", args.pid);
-    debug!("nodes {:?}", args.nodes);
-    let server = get_omni_paxos(args.pid, args.nodes);
+    if args.pids.len() != args.pids.len() {
+        panic!("The nodes and pids must be of the same size")
+    }
+    info!("Pid of this node{}!", args.pid);
+    info!("Pid of peers {:?}!", args.nodes);
+    info!("Nodes {:?}!", args.nodes);
+
+    let server = get_omni_paxos(args.pid, args.pids);
     let server_mut = Arc::new(Mutex::new(server));
     let server_run = server_mut.clone();
-    tokio::spawn( async move { server_run.clone().lock().await.run().await; });
+    tokio::spawn(async move { server_run.clone().lock().await.run().await; });
 
     let state = Arc::new(AppState { server: server_mut });
 

@@ -57,7 +57,7 @@ impl Network {
 
     /// Constructs a new Network instance and connects the Sockets.
     pub(crate) async fn new(args: &PodNumArgs) -> Self {
-        let peers: Vec<u64> = args.nodes
+        let peers: Vec<u64> = args.pids
             .iter()
             .filter(|pid| **pid != args.pid)
             .cloned()
