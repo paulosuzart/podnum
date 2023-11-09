@@ -32,6 +32,9 @@ async fn handle_podnum(State(state): State<Arc<AppState>>,
     (StatusCode::OK, "1")
 }
 
+async fn handle_applications() -> impl IntoResponse {
+    StatusCode::OK
+}
 
 #[tokio::main]
 async fn main() {
@@ -56,7 +59,8 @@ async fn main() {
         .route("/health", get(|| async {
             Response::new("OK");
         }))
-        .route("/:host", post(handle_podnum))
+        .route("/:application", get(handle_applications))
+        .route("/:application/hosts/:host", post(handle_podnum))
         .with_state(state);
 
     axum::Server::bind(&"0.0.0.0:3000".parse().unwrap())

@@ -8,12 +8,12 @@
 
 `podnum` takes advantage of [Omnipaxos](https://omnipaxos.com/), an innovative log replication framework that helps `podnum` keeps the leased numbers highly available.
 
-Pods (or stateless applications) after start will hit `podnum` `/{pod_host` endpoint. The reply is a plain number to be used by the application. Numbers are leased for 1 minute, if the application fails to heart bit, the number will be assigned to any new node asking for a number.
+Pods (or stateless applications) after start will hit `podnum` `/:application/:host` endpoint. The reply is a plain number to be used by the application. Numbers are leased for 1 minute, if the application fails to heart bit, the number will be assigned to any new node asking for a number.
 ```mermaid
 sequenceDiagram
     loop: Every 5 minutes
-    Pod->>+podnum: /{pod_host}
-    podnum->>leader: /{pod_host}
+    Pod->>+podnum: /:application/:host
+    podnum->>leader: /:application/:host
     leader->>leader: get or assign number
     leader-->>podnum: n
     podnum-->>Pod: n
